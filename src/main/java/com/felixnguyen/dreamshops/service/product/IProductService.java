@@ -2,6 +2,7 @@ package com.felixnguyen.dreamshops.service.product;
 
 import java.util.List;
 
+import com.felixnguyen.dreamshops.dto.ProductDto;
 import com.felixnguyen.dreamshops.model.Product;
 import com.felixnguyen.dreamshops.request.AddProductRequest;
 import com.felixnguyen.dreamshops.request.ProductUpdateRequest;
@@ -15,7 +16,7 @@ public interface IProductService {
 
   Product getProductById(Long id);
 
-  List<Product> getAllProducts();
+  List<ProductDto> getAllProducts();
 
   List<Product> getProductsByCategory(String category);
 

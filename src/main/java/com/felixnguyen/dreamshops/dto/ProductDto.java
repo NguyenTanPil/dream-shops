@@ -1,22 +1,18 @@
-package com.felixnguyen.dreamshops.request;
+package com.felixnguyen.dreamshops.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.Data;
 
 @Data
-public class AddProductRequest {
+public class ProductDto {
   private Long id;
-
   private String name;
-
   private String brand;
-
   private BigDecimal price;
-
   private int inventory;
-
   private String description;
-
-  private String category;
+  private CategoryDto category;
+  private List<ImageDto> images;
 }

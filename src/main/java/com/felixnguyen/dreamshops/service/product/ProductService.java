@@ -1,10 +1,14 @@
 package com.felixnguyen.dreamshops.service.product;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.felixnguyen.dreamshops.dto.CategoryDto;
+import com.felixnguyen.dreamshops.dto.ImageDto;
+import com.felixnguyen.dreamshops.dto.ProductDto;
 import com.felixnguyen.dreamshops.exceptions.ProductNotFoundException;
 import com.felixnguyen.dreamshops.model.Category;
 import com.felixnguyen.dreamshops.model.Product;
@@ -31,6 +35,31 @@ public class ProductService implements IProductService {
         category);
   }
 
+  private ProductDto convertToDto(Product product) {
+    ProductDto dto = new ProductDto();
+    dto.setId(product.getId());
+    dto.setName(product.getName());
+    dto.setBrand(product.getBrand());
+    dto.setPrice(product.getPrice());
+    dto.setInventory(product.getInventory());
+    dto.setDescription(product.getDescription());
+    CategoryDto category = new CategoryDto();
+    category.setId(product.getCategory().getId());
+    category.setName(product.getCategory().getName());
+
+    dto.setCategory(category);
+    dto.setImages(product.getImages().stream()
+        .map(image -> {
+          var imageDto = new ImageDto();
+          imageDto.setImageId(image.getId());
+          imageDto.setDownloadUrl(image.getDownloadUrl());
+          imageDto.setImageName(image.getFileName());
+          return imageDto;
+        })
+        .toList());
+    return dto;
+  }
+
   @Override
   @Transactional
   public Product addProduct(AddProductRequest request) {
@@ -38,14 +67,13 @@ public class ProductService implements IProductService {
     // if Yes, set is as new product's category
     // if No, create a new category and set it as new product's category
     // then save the new product to the DB
-    Category category = categoryRepository.findByName(request.getCategory().getName())
+    Category category = categoryRepository.findByName(request.getCategory())
         .orElseGet(() -> {
           Category newCategory = new Category();
-          newCategory.setName(request.getCategory().getName());
+          newCategory.setName(request.getCategory());
           return categoryRepository.save(newCategory);
         });
 
-    request.setCategory(category);
     return productRepository.save(createProduct(request, category));
   }
 
@@ -105,8 +133,11 @@ public class ProductService implements IProductService {
   }
 
   @Override
-  public List<Product> getAllProducts() {
-    return productRepository.findAll();
+  public List<ProductDto> getAllProducts() {
+    return productRepository.findAll()
+        .stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override

@@ -1,7 +1,10 @@
 package com.felixnguyen.dreamshops.controller;
 
+import java.sql.SQLException;
 import java.util.List;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,12 +12,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.felixnguyen.dreamshops.dto.ImageDto;
+import com.felixnguyen.dreamshops.model.Image;
 import com.felixnguyen.dreamshops.response.ApiResponse;
 import com.felixnguyen.dreamshops.service.image.IImageService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+@Tag(name = "Image APIs", description = "APIs for managing images")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("${api.prefix}/images")
@@ -28,6 +37,56 @@ public class ImageController {
       List<ImageDto> imageDtos = imageService.saveImage(files, productId);
       return ResponseEntity.ok(new ApiResponse("Update successfully", imageDtos));
     } catch (Exception e) {
+      return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+          .body(new ApiResponse("Update failed: " + e.getMessage(), null));
+    }
+  }
+
+  @GetMapping("/download/{imageId}")
+  public ResponseEntity<ByteArrayResource> downloadImage(@PathVariable Long imageId) {
+    try {
+      Image image = imageService.getImageById(imageId);
+      byte[] imageBytes = image.getImage().getBytes(1, (int) image.getImage().length());
+
+      ByteArrayResource resource = new ByteArrayResource(imageBytes);
+
+      return ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))
+          .header("Content-Disposition", "attachment; filename=\"" + image.getFileName() + "\"")
+          .contentLength(image.getImage().length())
+          .body(resource);
+    } catch (SQLException e) {
+      throw new RuntimeException("Error retrieving image from database", e);
+    }
+  }
+
+  @PostMapping("/delete/{imageId}/delete")
+  public ResponseEntity<ApiResponse> deleteImage(@PathVariable Long imageId) {
+    Image image = imageService.getImageById(imageId);
+    try {
+      if (image != null) {
+        imageService.deleteImage(imageId);
+        return ResponseEntity.ok().body(new ApiResponse("Delete image successful", null));
+      } else {
+        return ResponseEntity.status(404).body(new ApiResponse("Image not found", null));
+      }
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+          .body(new ApiResponse("Delete failed: " + e.getMessage(), null));
+    }
+  }
+
+  @PostMapping("/update/{imageId}/update")
+  public ResponseEntity<ApiResponse> updateImage(@RequestParam MultipartFile file, @PathVariable Long imageId) {
+    Image image = imageService.getImageById(imageId);
+
+    try {
+      if (image != null) {
+        imageService.updateImage(file, imageId);
+        return ResponseEntity.ok().body(new ApiResponse("Update image successful!", null));
+      } else {
+        return ResponseEntity.status(404).body(new ApiResponse("Image not found", null));
+      }
+    } catch (RuntimeException e) {
       return ResponseEntity.status(INTERNAL_SERVER_ERROR)
           .body(new ApiResponse("Update failed: " + e.getMessage(), null));
     }
