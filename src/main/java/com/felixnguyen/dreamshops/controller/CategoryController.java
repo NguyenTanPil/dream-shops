@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.felixnguyen.dreamshops.dto.CategoryDto;
 import com.felixnguyen.dreamshops.exceptions.AlreadyExistsException;
 import com.felixnguyen.dreamshops.exceptions.ResourceNotFoundException;
 import com.felixnguyen.dreamshops.model.Category;
@@ -28,10 +29,6 @@ public class CategoryController {
   private final ICategoryService categoryService;
 
   @GetMapping("/all")
-  public String getMethodName(@RequestParam String param) {
-    return new String();
-  }
-
   public ResponseEntity<ApiResponse> getAllCategories() {
     try {
       return ResponseEntity.ok()
@@ -44,7 +41,7 @@ public class CategoryController {
   @PostMapping("/add")
   public ResponseEntity<ApiResponse> addCategory(@RequestBody Category category) {
     try {
-      Category newCategory = categoryService.addCategory(category);
+      CategoryDto newCategory = categoryService.addCategory(category);
       return ResponseEntity.ok().body(new ApiResponse("Created success", newCategory));
     } catch (AlreadyExistsException e) {
       return ResponseEntity.status(500).body(new ApiResponse("Error server: " + e.getMessage(), null));
@@ -54,7 +51,7 @@ public class CategoryController {
   @GetMapping("/{categoryId}/category")
   public ResponseEntity<ApiResponse> getCategoryById(@RequestParam Long categoryId) {
     try {
-      Category category = categoryService.getCategoryById(categoryId);
+      CategoryDto category = categoryService.getCategoryById(categoryId);
       return ResponseEntity.ok().body(new ApiResponse("Get category successfully", category));
     } catch (ResourceNotFoundException e) {
       return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
@@ -64,7 +61,7 @@ public class CategoryController {
   @GetMapping("/category/{categoryName}/category")
   public ResponseEntity<ApiResponse> getCategoryByName(@RequestParam String categoryName) {
     try {
-      Category category = categoryService.getCategoryByName(categoryName);
+      CategoryDto category = categoryService.getCategoryByName(categoryName);
       return ResponseEntity.ok().body(new ApiResponse("Get category successfully", category));
     } catch (ResourceNotFoundException e) {
       return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
@@ -84,7 +81,7 @@ public class CategoryController {
   @PutMapping("/category/{categoryId}/delete")
   public ResponseEntity<ApiResponse> updateCategory(@RequestParam Long categoryId, @RequestBody Category category) {
     try {
-      Category updatedCategory = categoryService.updateCategory(categoryId, category);
+      CategoryDto updatedCategory = categoryService.updateCategory(categoryId, category);
       return ResponseEntity.ok().body(new ApiResponse("Update category successfully", updatedCategory));
     } catch (ResourceNotFoundException e) {
       return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));

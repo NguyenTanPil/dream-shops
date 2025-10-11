@@ -3,11 +3,10 @@ package com.felixnguyen.dreamshops.service.product;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.felixnguyen.dreamshops.dto.CategoryDto;
-import com.felixnguyen.dreamshops.dto.ImageDto;
 import com.felixnguyen.dreamshops.dto.ProductDto;
 import com.felixnguyen.dreamshops.exceptions.ProductNotFoundException;
 import com.felixnguyen.dreamshops.model.Category;
@@ -24,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService implements IProductService {
   private final ProductRepository productRepository;
   private final CategoryRepository categoryRepository;
+  private final ModelMapper modelMapper;
 
   private Product createProduct(AddProductRequest request, Category category) {
     return new Product(
@@ -36,33 +36,12 @@ public class ProductService implements IProductService {
   }
 
   private ProductDto convertToDto(Product product) {
-    ProductDto dto = new ProductDto();
-    dto.setId(product.getId());
-    dto.setName(product.getName());
-    dto.setBrand(product.getBrand());
-    dto.setPrice(product.getPrice());
-    dto.setInventory(product.getInventory());
-    dto.setDescription(product.getDescription());
-    CategoryDto category = new CategoryDto();
-    category.setId(product.getCategory().getId());
-    category.setName(product.getCategory().getName());
-
-    dto.setCategory(category);
-    dto.setImages(product.getImages().stream()
-        .map(image -> {
-          var imageDto = new ImageDto();
-          imageDto.setImageId(image.getId());
-          imageDto.setDownloadUrl(image.getDownloadUrl());
-          imageDto.setImageName(image.getFileName());
-          return imageDto;
-        })
-        .toList());
-    return dto;
+    return modelMapper.map(product, ProductDto.class);
   }
 
   @Override
   @Transactional
-  public Product addProduct(AddProductRequest request) {
+  public ProductDto addProduct(AddProductRequest request) {
     // check if the category is found in the DB
     // if Yes, set is as new product's category
     // if No, create a new category and set it as new product's category
@@ -74,7 +53,7 @@ public class ProductService implements IProductService {
           return categoryRepository.save(newCategory);
         });
 
-    return productRepository.save(createProduct(request, category));
+    return convertToDto(productRepository.save(createProduct(request, category)));
   }
 
   @Transactional
@@ -110,10 +89,11 @@ public class ProductService implements IProductService {
 
   @Override
   @Transactional
-  public Product updateProduct(Long id, ProductUpdateRequest request) {
+  public ProductDto updateProduct(Long id, ProductUpdateRequest request) {
     return productRepository.findById(id)
         .map(existingProduct -> updateExistingProduct(existingProduct, request))
         .map(productRepository::save)
+        .map(this::convertToDto)
         .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
   }
 
@@ -127,7 +107,13 @@ public class ProductService implements IProductService {
   }
 
   @Override
-  public Product getProductById(Long id) {
+  public ProductDto getProductById(Long id) {
+    return productRepository.findById(id).map(this::convertToDto)
+        .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
+  }
+
+  @Override
+  public Product getOriginProductById(Long id) {
     return productRepository.findById(id)
         .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
   }
@@ -141,28 +127,38 @@ public class ProductService implements IProductService {
   }
 
   @Override
-  public List<Product> getProductsByCategory(String category) {
-    return productRepository.findByCategoryName(category);
+  public List<ProductDto> getProductsByCategory(String category) {
+    return productRepository.findByCategoryName(category).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<Product> getProductsByBrand(String brand) {
-    return productRepository.findByBrand(brand);
+  public List<ProductDto> getProductsByBrand(String brand) {
+    return productRepository.findByBrand(brand).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<Product> getProductsByCategoryAndBrand(String category, String brand) {
-    return productRepository.findByCategoryNameAndBrand(category, brand);
+  public List<ProductDto> getProductsByCategoryAndBrand(String category, String brand) {
+    return productRepository.findByCategoryNameAndBrand(category, brand).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<Product> getProductsByName(String name) {
-    return productRepository.findByName(name);
+  public List<ProductDto> getProductsByName(String name) {
+    return productRepository.findByName(name).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<Product> getProductsByBrandAndName(String brand, String name) {
-    return productRepository.findByBrandAndName(brand, name);
+  public List<ProductDto> getProductsByBrandAndName(String brand, String name) {
+    return productRepository.findByBrandAndName(brand, name).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   @Override

@@ -2,18 +2,19 @@ package com.felixnguyen.dreamshops.service.category;
 
 import java.util.List;
 
+import com.felixnguyen.dreamshops.dto.CategoryDto;
 import com.felixnguyen.dreamshops.model.Category;
 
 public interface ICategoryService {
-  Category getCategoryById(Long id);
+  CategoryDto getCategoryById(Long id);
 
-  Category getCategoryByName(String name);
+  CategoryDto getCategoryByName(String name);
 
-  List<Category> getAllCategories();
+  List<CategoryDto> getAllCategories();
 
-  Category addCategory(Category category);
+  CategoryDto addCategory(Category category);
 
-  Category updateCategory(Long id, Category category);
+  CategoryDto updateCategory(Long id, Category category);
 
   void deleteCategory(Long id);
 }

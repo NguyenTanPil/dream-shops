@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.felixnguyen.dreamshops.dto.ImageDto;
+import com.felixnguyen.dreamshops.exceptions.ResourceNotFoundException;
 import com.felixnguyen.dreamshops.model.Image;
 import com.felixnguyen.dreamshops.response.ApiResponse;
 import com.felixnguyen.dreamshops.service.image.IImageService;
@@ -19,9 +20,11 @@ import com.felixnguyen.dreamshops.service.image.IImageService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @Tag(name = "Image APIs", description = "APIs for managing images")
 @RequiredArgsConstructor
@@ -31,6 +34,12 @@ public class ImageController {
   private final IImageService imageService;
   private static final int INTERNAL_SERVER_ERROR = 500;
 
+  @GetMapping("/all")
+  public ResponseEntity<ApiResponse> getAllImages() {
+    List<ImageDto> images = imageService.getAllImages();
+    return ResponseEntity.ok(new ApiResponse("Images retrieved successfully", images));
+  }
+
   @PostMapping("/upload")
   public ResponseEntity<ApiResponse> saveImages(@RequestParam List<MultipartFile> files, @RequestParam Long productId) {
     try {
@@ -38,14 +47,14 @@ public class ImageController {
       return ResponseEntity.ok(new ApiResponse("Update successfully", imageDtos));
     } catch (Exception e) {
       return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-          .body(new ApiResponse("Update failed: " + e.getMessage(), null));
+          .body(new ApiResponse("Upload failed: " + e.getMessage(), null));
     }
   }
 
   @GetMapping("/download/{imageId}")
-  public ResponseEntity<ByteArrayResource> downloadImage(@PathVariable Long imageId) {
+  public ResponseEntity<?> downloadImage(@PathVariable Long imageId) {
     try {
-      Image image = imageService.getImageById(imageId);
+      Image image = imageService.getOriginImageById(imageId);
       byte[] imageBytes = image.getImage().getBytes(1, (int) image.getImage().length());
 
       ByteArrayResource resource = new ByteArrayResource(imageBytes);
@@ -56,12 +65,14 @@ public class ImageController {
           .body(resource);
     } catch (SQLException e) {
       throw new RuntimeException("Error retrieving image from database", e);
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
-  @PostMapping("/delete/{imageId}/delete")
+  @DeleteMapping("/{imageId}/delete")
   public ResponseEntity<ApiResponse> deleteImage(@PathVariable Long imageId) {
-    Image image = imageService.getImageById(imageId);
+    ImageDto image = imageService.getImageById(imageId);
     try {
       if (image != null) {
         imageService.deleteImage(imageId);
@@ -75,9 +86,9 @@ public class ImageController {
     }
   }
 
-  @PostMapping("/update/{imageId}/update")
+  @PutMapping("/{imageId}/update")
   public ResponseEntity<ApiResponse> updateImage(@RequestParam MultipartFile file, @PathVariable Long imageId) {
-    Image image = imageService.getImageById(imageId);
+    ImageDto image = imageService.getImageById(imageId);
 
     try {
       if (image != null) {

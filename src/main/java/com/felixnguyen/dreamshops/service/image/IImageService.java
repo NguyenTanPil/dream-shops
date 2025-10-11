@@ -8,11 +8,15 @@ import com.felixnguyen.dreamshops.dto.ImageDto;
 import com.felixnguyen.dreamshops.model.Image;
 
 public interface IImageService {
-  Image getImageById(Long id);
+  ImageDto getImageById(Long id);
+
+  Image getOriginImageById(Long id);
 
   List<ImageDto> saveImage(List<MultipartFile> file, Long productId);
 
   void deleteImage(Long id);
 
   void updateImage(MultipartFile file, Long id);
+
+  List<ImageDto> getAllImages();
 }
