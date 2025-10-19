@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.felixnguyen.dreamshops.dto.CartDto;
 import com.felixnguyen.dreamshops.exceptions.ResourceNotFoundException;
 import com.felixnguyen.dreamshops.model.Cart;
+import com.felixnguyen.dreamshops.model.User;
 import com.felixnguyen.dreamshops.repository.CartItemRepository;
 import com.felixnguyen.dreamshops.repository.CartRepository;
 
@@ -62,8 +63,23 @@ public class CartService implements ICartService {
         .orElseThrow(() -> new ResourceNotFoundException("Not found cart id: " + id));
   }
 
-  public Long initializeNewCart() {
-    Cart newCart = new Cart();
-    return cartRepository.save(newCart).getId();
+  public Cart initializeNewCart(User user) {
+    return cartRepository.findByUserId(user.getId()).orElseGet(() -> {
+      Cart cart = new Cart();
+      cart.setUser(user);
+      return cartRepository.save(cart);
+    });
+  }
+
+  @Override
+  public CartDto getCartByUserId(Long userId) {
+    return cartRepository.findByUserId(userId).map(this::convertToDto)
+        .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
+  }
+
+  @Override
+  public Cart getOriginCartByUserId(Long userId) {
+    return cartRepository.findByUserId(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
   }
 }
