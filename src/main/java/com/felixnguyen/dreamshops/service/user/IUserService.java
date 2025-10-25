@@ -10,6 +10,8 @@ public interface IUserService {
 
   User getOriginUserById(Long id);
 
+  User getAuthenticationUser();
+
   UserDto createUser(CreateUserRequest request);
 
   UserDto updateUser(Long id, UpdateUserRequest request);

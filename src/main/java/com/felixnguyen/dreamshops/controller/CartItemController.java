@@ -1,5 +1,6 @@
 package com.felixnguyen.dreamshops.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import com.felixnguyen.dreamshops.service.cart.ICartItemService;
 import com.felixnguyen.dreamshops.service.cart.ICartService;
 import com.felixnguyen.dreamshops.service.user.IUserService;
 
+import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -34,12 +36,14 @@ public class CartItemController {
       @RequestParam Long productId,
       @RequestParam Integer quantity) {
     try {
-      User user = userService.getOriginUserById(1L);
+      User user = userService.getAuthenticationUser();
       Cart cart = cartService.initializeNewCart(user);
       cartItemService.addItemToCart(cart.getId(), productId, quantity);
       return ResponseEntity.ok().body(new ApiResponse("Add item to cart success", null));
     } catch (ResourceNotFoundException e) {
       return ResponseEntity.badRequest().body(new ApiResponse(e.getMessage(), null));
+    } catch (JwtException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Internal server error", null));
     }
   }
 
@@ -62,7 +66,7 @@ public class CartItemController {
       cartItemService.updateItemQuantity(cartId, productId, quantity);
       return ResponseEntity.ok(new ApiResponse("Update Item Success", null));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
 
   }

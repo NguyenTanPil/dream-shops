@@ -1,5 +1,6 @@
 package com.felixnguyen.dreamshops.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +35,7 @@ public class CategoryController {
       return ResponseEntity.ok()
           .body(new ApiResponse("Get all categories successfully", categoryService.getAllCategories()));
     } catch (RuntimeException e) {
-      return ResponseEntity.status(500).body(new ApiResponse("Error server", null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Error server", null));
     }
   }
 
@@ -44,7 +45,8 @@ public class CategoryController {
       CategoryDto newCategory = categoryService.addCategory(category);
       return ResponseEntity.ok().body(new ApiResponse("Created success", newCategory));
     } catch (AlreadyExistsException e) {
-      return ResponseEntity.status(500).body(new ApiResponse("Error server: " + e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ApiResponse("Error server: " + e.getMessage(), null));
     }
   }
 
@@ -54,7 +56,7 @@ public class CategoryController {
       CategoryDto category = categoryService.getCategoryById(categoryId);
       return ResponseEntity.ok().body(new ApiResponse("Get category successfully", category));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -64,7 +66,7 @@ public class CategoryController {
       CategoryDto category = categoryService.getCategoryByName(categoryName);
       return ResponseEntity.ok().body(new ApiResponse("Get category successfully", category));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -74,7 +76,7 @@ public class CategoryController {
       categoryService.deleteCategory(categoryId);
       return ResponseEntity.ok().body(new ApiResponse("Delete category successfully", null));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -84,7 +86,7 @@ public class CategoryController {
       CategoryDto updatedCategory = categoryService.updateCategory(categoryId, category);
       return ResponseEntity.ok().body(new ApiResponse("Update category successfully", updatedCategory));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 }

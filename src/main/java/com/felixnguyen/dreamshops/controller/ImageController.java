@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("${api.prefix}/images")
 public class ImageController {
   private final IImageService imageService;
-  private static final int INTERNAL_SERVER_ERROR = 500;
 
   @GetMapping("/all")
   public ResponseEntity<ApiResponse> getAllImages() {
@@ -46,7 +46,7 @@ public class ImageController {
       List<ImageDto> imageDtos = imageService.saveImage(files, productId);
       return ResponseEntity.ok(new ApiResponse("Update successfully", imageDtos));
     } catch (Exception e) {
-      return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ApiResponse("Upload failed: " + e.getMessage(), null));
     }
   }
@@ -66,7 +66,7 @@ public class ImageController {
     } catch (SQLException e) {
       throw new RuntimeException("Error retrieving image from database", e);
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -78,10 +78,10 @@ public class ImageController {
         imageService.deleteImage(imageId);
         return ResponseEntity.ok().body(new ApiResponse("Delete image successful", null));
       } else {
-        return ResponseEntity.status(404).body(new ApiResponse("Image not found", null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Image not found", null));
       }
     } catch (RuntimeException e) {
-      return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ApiResponse("Delete failed: " + e.getMessage(), null));
     }
   }
@@ -95,10 +95,10 @@ public class ImageController {
         imageService.updateImage(file, imageId);
         return ResponseEntity.ok().body(new ApiResponse("Update image successful!", null));
       } else {
-        return ResponseEntity.status(404).body(new ApiResponse("Image not found", null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Image not found", null));
       }
     } catch (RuntimeException e) {
-      return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ApiResponse("Update failed: " + e.getMessage(), null));
     }
   }

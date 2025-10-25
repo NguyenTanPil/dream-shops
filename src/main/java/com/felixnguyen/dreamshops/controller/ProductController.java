@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.felixnguyen.dreamshops.dto.ProductDto;
+import com.felixnguyen.dreamshops.exceptions.AlreadyExistsException;
 import com.felixnguyen.dreamshops.exceptions.ProductNotFoundException;
 import com.felixnguyen.dreamshops.exceptions.ResourceNotFoundException;
 import com.felixnguyen.dreamshops.request.AddProductRequest;
@@ -17,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,37 +47,41 @@ public class ProductController {
       ProductDto product = productService.getProductById(id);
       return ResponseEntity.ok(new ApiResponse("Product retrieved successfully", product));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/add")
   public ResponseEntity<ApiResponse> addProduct(@RequestBody AddProductRequest product) {
     try {
       ProductDto createdProduct = productService.addProduct(product);
-      return ResponseEntity.status(201).body(new ApiResponse("Product created successfully", createdProduct));
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(new ApiResponse("Product created successfully", createdProduct));
+    } catch (AlreadyExistsException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PutMapping("/{id}/update")
   public ResponseEntity<ApiResponse> updateProduct(@PathVariable Long id, @RequestBody ProductUpdateRequest product) {
     try {
       ProductDto updatedProduct = productService.updateProduct(id, product);
       return ResponseEntity.ok(new ApiResponse("Updated product", updatedProduct));
     } catch (ProductNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/{id}/delete")
   public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id) {
     try {
       productService.deleteProduct(id);
       return ResponseEntity.ok(new ApiResponse("Product deleted successfully", null));
     } catch (ProductNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -84,13 +91,13 @@ public class ProductController {
     try {
       List<ProductDto> products = productService.getProductsByCategoryAndBrand(categoryName, brandName);
       if (products.isEmpty()) {
-        return ResponseEntity.status(404)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(
                 new ApiResponse("No products found for category: " + categoryName + " and brand: " + brandName, null));
       }
       return ResponseEntity.ok().body(new ApiResponse("Products retrieved successfully", products));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -100,12 +107,12 @@ public class ProductController {
     try {
       List<ProductDto> products = productService.getProductsByBrandAndName(brandName, productName);
       if (products.isEmpty()) {
-        return ResponseEntity.status(404)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ApiResponse("No products found for brand: " + brandName + " and name: " + productName, null));
       }
       return ResponseEntity.ok().body(new ApiResponse("Products retrieved successfully", products));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -114,12 +121,12 @@ public class ProductController {
     try {
       List<ProductDto> products = productService.getProductsByName(productName);
       if (products.isEmpty()) {
-        return ResponseEntity.status(404)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ApiResponse("No products found for name: " + productName, null));
       }
       return ResponseEntity.ok().body(new ApiResponse("Products retrieved successfully", products));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -128,12 +135,12 @@ public class ProductController {
     try {
       List<ProductDto> products = productService.getProductsByBrand(brandName);
       if (products.isEmpty()) {
-        return ResponseEntity.status(404)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ApiResponse("No products found for brand: " + brandName, null));
       }
       return ResponseEntity.ok().body(new ApiResponse("Products retrieved successfully", products));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -142,12 +149,12 @@ public class ProductController {
     try {
       List<ProductDto> products = productService.getProductsByCategory(categoryName);
       if (products.isEmpty()) {
-        return ResponseEntity.status(404)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ApiResponse("No products found for category: " + categoryName, null));
       }
       return ResponseEntity.ok().body(new ApiResponse("Products retrieved successfully", products));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
     }
   }
 }

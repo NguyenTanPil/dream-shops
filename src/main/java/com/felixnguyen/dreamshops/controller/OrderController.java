@@ -2,6 +2,7 @@ package com.felixnguyen.dreamshops.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +31,7 @@ public class OrderController {
       OrderDto order = orderService.getOrder(orderId);
       return ResponseEntity.ok().body(new ApiResponse("Get order success", order));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -50,7 +51,7 @@ public class OrderController {
       List<OrderDto> orders = orderService.getUserOrders(userId);
       return ResponseEntity.ok().body(new ApiResponse("Get orders success", orders));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 

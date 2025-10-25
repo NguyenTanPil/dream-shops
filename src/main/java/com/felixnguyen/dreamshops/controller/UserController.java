@@ -1,5 +1,6 @@
 package com.felixnguyen.dreamshops.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +35,7 @@ public class UserController {
       UserDto user = userService.getUserById(userId);
       return ResponseEntity.ok().body(new ApiResponse("Get user success", user));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -48,7 +49,7 @@ public class UserController {
       UserDto user = userService.createUser(request);
       return ResponseEntity.ok().body(new ApiResponse("Create user success", user));
     } catch (AlreadyExistsException e) {
-      return ResponseEntity.status(409).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -58,7 +59,7 @@ public class UserController {
       UserDto user = userService.updateUser(userId, request);
       return ResponseEntity.ok().body(new ApiResponse("Update user success", user));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 
@@ -68,7 +69,7 @@ public class UserController {
       userService.deleteUser(userId);
       return ResponseEntity.ok().body(new ApiResponse("Delete user success", null));
     } catch (ResourceNotFoundException e) {
-      return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
     }
   }
 

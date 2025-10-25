@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.felixnguyen.dreamshops.dto.ProductDto;
+import com.felixnguyen.dreamshops.exceptions.AlreadyExistsException;
 import com.felixnguyen.dreamshops.exceptions.ProductNotFoundException;
 import com.felixnguyen.dreamshops.model.Category;
 import com.felixnguyen.dreamshops.model.Product;
@@ -46,6 +47,12 @@ public class ProductService implements IProductService {
     // if Yes, set is as new product's category
     // if No, create a new category and set it as new product's category
     // then save the new product to the DB
+
+    if (productExits(request.getName(), request.getBrand())) {
+      throw new AlreadyExistsException("Product already exists with name: " + request.getName()
+          + " and brand: " + request.getBrand());
+    }
+
     Category category = categoryRepository.findByName(request.getCategory())
         .orElseGet(() -> {
           Category newCategory = new Category();
@@ -54,6 +61,10 @@ public class ProductService implements IProductService {
         });
 
     return convertToDto(productRepository.save(createProduct(request, category)));
+  }
+
+  private boolean productExits(String name, String brand) {
+    return productRepository.existsByNameAndBrand(name, brand);
   }
 
   @Transactional
